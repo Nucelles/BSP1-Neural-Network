@@ -1,46 +1,44 @@
-import numpy as np
 import math
+import numpy as np
 
 class Neuron():
 
-    def __init__(self):
-        np.random.seed(2019)
-        self.weight = 2  # np.random.rand(1)
-        self.inputData = []
+    def __init__(self, layerSize):
+        self.weights = np.random.rand(layerSize)
         self.bias = 0
-        self.currentSum = 0
-        self.output = 0
 
-    def recieveInputs(self, inputs):
+    def runNeuron(self, inputs):
         """
-        This function will receive the inputs of the neuron and assign their respective weights and then add to the
-        object's input array.
-        Input = [Inputs], Output = [Weighted Inputs]
+        This function will run the other functions of the neurons, all the necessary functions to process the input.
+        :return:
         """
-        for input in inputs:
-            self.inputData.append(input*self.weight)
-            print(self.inputData)
+        dotOutput = self.applyDot(inputs)
+        output = self.applyActivationFunction(dotOutput)
+        #print(dotOutput)
+        #print(output)
 
-    def getSum(self, applyBias):
-        """
-        This function will get the sum of all the weighted inputs.
-        Input = ApplyBias = Boolean, Output = SumOfInputs
-        Add this as the DOT product NOT USING NUMPY
-        """
-        for inputs in self.inputData:
-            self.currentSum += inputs
+        return output
 
-        if applyBias:
-            self.currentSum
-        self.inputData = []
+    def applyDot(self, inputs):
+        """
+        This function use the dot function to on the input and weights.
+        Input = [Inputs]
+        :return:
+        """
 
-    def applyActivationFunction(self):
+        dotOutput = 0
+        for currInput in range(len(inputs)):
+            dotOutput += inputs[currInput] * self.weights[currInput]
+
+        return dotOutput
+
+    def applyActivationFunction(self, dotOutput):
         """
         This function will apply the sigmoid function to the sum of the inputs.
         Input = SumOfInputs, Output = finalOutput
         """
-        output = 1 / (1 + math.exp(-self.currentSum))
-        self.output = output
+        output = 1 / (1 + math.exp(-dotOutput))
+
         return output
 
     def adjustWeights(self):
@@ -49,11 +47,8 @@ class Neuron():
         then be adjusted depending on the size of the error. (neuron's output - actual output = error)
         """
 
-neuron = Neuron()
-training_input = [0.1231, 0.3295, 0.12985732, 0.32875, 0.7923]
-neuron.recieveInputs(training_input)
-print(neuron.weight)
-print(neuron.inputData)
-neuron.getSum(False)
-print(neuron.applyActivationFunction())
+neuron = Neuron(4)
+training_input = [1, 2, 3, 4]
+neuron.runNeuron(training_input)
+
 
