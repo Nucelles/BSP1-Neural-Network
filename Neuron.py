@@ -3,9 +3,12 @@ import numpy as np
 
 class Neuron():
 
-    def __init__(self, layerSize):
-        self.weights = np.random.rand(layerSize)
+    def __init__(self, numberOfInputs, activationFunction):
+        self.activationFunction = activationFunction
+        self.weights = np.random.rand(numberOfInputs)
+        self.weightsPreset = []
         self.bias = 0
+        self.output = 0
 
     def runNeuron(self, inputs):
         """
@@ -14,8 +17,8 @@ class Neuron():
         """
         dotOutput = self.applyDot(inputs)
         output = self.applyActivationFunction(dotOutput)
-        #print(dotOutput)
-        #print(output)
+        # print(dotOutput)
+        # print(output)
 
         return output
 
@@ -23,7 +26,6 @@ class Neuron():
         """
         This function use the dot function to on the input and weights.
         Input = [Inputs]
-        :return:
         """
 
         dotOutput = 0
@@ -37,17 +39,30 @@ class Neuron():
         This function will apply the sigmoid function to the sum of the inputs.
         Input = SumOfInputs, Output = finalOutput
         """
-        output = 1 / (1 + math.exp(-dotOutput))
+        if self.activationFunction == "Sigmoid":
+            self.output = 1 / (1 + math.exp(-dotOutput))
+        elif self.activationFunction == "ReLu":
+            # ReLu activation function
+            if dotOutput < 0:
+                self.output = 0
+            else:
+                self.output = dotOutput
 
-        return output
+        elif self.activationFunction == "Leaky ReLu":
+            # Leaky ReLu activation function
+            if dotOutput < 0:
+                self.output = 0
+            else:
+                self.output = 0.01*dotOutput
+        else:
+            print("Activation function not recognized, using default Sigmoid")
+            self.output = 1 / (1 + math.exp(-dotOutput))
 
-    def adjustWeights(self):
-        """
-        This function will compare the output of the neuron to the correct output to find the error. The weights will
-        then be adjusted depending on the size of the error. (neuron's output - actual output = error)
-        """
+        return self.output
 
-neuron = Neuron(4)
+
+
+neuron = Neuron(4, "Sigmoid")
 training_input = [1, 2, 3, 4]
 neuron.runNeuron(training_input)
 

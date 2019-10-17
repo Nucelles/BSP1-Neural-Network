@@ -1,25 +1,31 @@
 import Neuron
 
-class neuronLayer():
-
-    def __init__(self, layers):
-        #self.connection = connection
+class layer():
+    def __init__(self, layers, activationFunction):
         self.layers = layers
         self.layerList = []
         self.layerOutput = []
 
         for i in range(self.layers):
-            self.layerList.append(Neuron.Neuron(layers))
+            self.layerList.append(Neuron.Neuron(layers, activationFunction))
 
-    def runLayer(self, previousLayerOutput):
+
+class neuronLayer(layer):
+
+    def __init__(self, layers, activationFunction, previousLayer):
+        self.previousLayer = previousLayer
+        super().__init__(layers, activationFunction)
+
+    def runLayer(self):
         self.layerOutput = []
         for neuron in self.layerList:
-            self.layerOutput.append(neuron.runNeuron(previousLayerOutput))
-            # self.layerOutput.append(neuron.runNeuron(self.connection.layerOutput))
+            self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
 
 
-trainingInput = [0.27, 0.3, 0.75, 0.5]
+class inputLayer(layer):
+    def __init__(self, inputSize, inputData, activationFunction):
+        super().__init__(inputSize, activationFunction)
 
-layer1 = neuronLayer(5)
-layer1.runLayer(trainingInput)
-print(layer1.layerOutput)
+        for i in range(self.layers):
+            self.layerList[i].output = inputData[i]
+            self.layerOutput.append(inputData[i])
