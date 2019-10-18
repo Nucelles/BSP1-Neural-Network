@@ -1,14 +1,14 @@
-import Neuron as neuron
-import neuronLayers as layer
-import numpy as np
 
-trainingInput = [0.27, 0.3, 0.75, 0.5, 0.420]
 
+# The test cases need to be changed for the new network class format
+
+
+"""
 inputlayer1 = layer.inputLayer(5, trainingInput, "Sigmoid")
 
-layer1 = layer.neuronLayer(5, "Leaky ReLu", inputlayer1)
-layer2 = layer.neuronLayer(6, "Sigmoid", layer1)
-layer3 = layer.neuronLayer(7, "ReLu", layer2)
+layer1 = layer.neuronLayer(5, "Leaky ReLu")
+layer2 = layer.neuronLayer(6, "Sigmoid")
+layer3 = layer.neuronLayer(7, "ReLu")
 
 mainlayers = [layer1, layer2, layer3]
 
@@ -17,7 +17,7 @@ for i in mainlayers:
     print(i.layerOutput)
     print(15*"--")
 
-"""
+
 Below is the last test case for only testing the neuron dot function
 against numpy
 testCaseWeight = [0.5, 0.7, 1.95, 2]
