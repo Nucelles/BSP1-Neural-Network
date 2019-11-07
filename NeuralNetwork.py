@@ -12,7 +12,7 @@ from statistics import mean
 def derivitiveSigmoid(x):
     """
     This function returns the value inputted into the derivative sigmoid function.
-    :param x: float, value that will passedi nto the function
+    :param x: float, value that will passed nto the function
     :return:
     """
 
@@ -64,12 +64,24 @@ class Neuron:
 
     def applyActivationFunction(self, dotOutput):
         """
-        This function will apply the sigmoid function to the sum of the inputs and retunr the nuerons output.
+        This function will apply the sigmoid function to the sum of the inputs and return the nuerons output.
         :param dotOutput: float, this is the value that is returned from the applyDot() function
         :return:
         """
         if self.activationFunction == "Sigmoid":
             self.output = 1 / (1 + math.exp(-dotOutput))
+
+        elif self.activationFunction == "Binary":
+
+            if dotOutput < 0:
+                self.output = 0
+            else:
+                self.output = 1
+
+        elif self.activationFunction == "TanH":
+            # TanH activation function
+            self.output = (math.exp(dotOutput) - math.exp(-dotOutput)) / (math.exp(dotOutput) + math.exp(-dotOutput))
+
         elif self.activationFunction == "ReLu":
             # ReLu activation function
             if dotOutput < 0:
