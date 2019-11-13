@@ -5,28 +5,18 @@ Hello World
 """
 NEURON CLASSES
 """
+from random import random
 import numpy as np
 import math
 from statistics import mean
-
-def derivitiveSigmoid(x):
-    """
-    This function returns the value inputted into the derivative sigmoid function.
-    :param x: float, value that will passed nto the function
-    :return:
-    """
-
-    derivitiveX = 1 / (1 + math.exp(-x))
-
-    return derivitiveX * (1 - derivitiveX)
-
+import ActivationFunctions as ac
 
 
 class Neuron:
 
     def __init__(self, numberOfInputs, activationFunction):
         self.activationFunction = activationFunction
-        self.weights = [0,1]
+        self.weights = [random() for i in range(numberOfInputs)]
         self.bias = 1
         self.output = 0
 
@@ -57,49 +47,15 @@ class Neuron:
         """
 
         dotOutput = 0
+
         for currInput in range(len(inputs)):
+
             dotOutput += inputs[currInput] * self.weights[currInput]
 
         return dotOutput
 
     def applyActivationFunction(self, dotOutput):
-        """
-        This function will apply the sigmoid function to the sum of the inputs and return the nuerons output.
-        :param dotOutput: float, this is the value that is returned from the applyDot() function
-        :return:
-        """
-        if self.activationFunction == "Sigmoid":
-            self.output = 1 / (1 + math.exp(-dotOutput))
-
-        elif self.activationFunction == "Binary":
-
-            if dotOutput < 0:
-                self.output = 0
-            else:
-                self.output = 1
-
-        elif self.activationFunction == "TanH":
-            # TanH activation function
-            self.output = (math.exp(dotOutput) - math.exp(-dotOutput)) / (math.exp(dotOutput) + math.exp(-dotOutput))
-
-        elif self.activationFunction == "ReLu":
-            # ReLu activation function
-            if dotOutput < 0:
-                self.output = 0
-            else:
-                self.output = dotOutput
-
-        elif self.activationFunction == "Leaky ReLu":
-            # Leaky ReLu activation function
-            if dotOutput < 0:
-                self.output = 0
-            else:
-                self.output = 0.01*dotOutput
-        else:
-            print("Activation function not recognized, using default Sigmoid")
-            self.output = 1 / (1 + math.exp(-dotOutput))
-
-        return self.output
+        return self.activationFunction(dotOutput)
 
 """
 Below is the definition of the layer class 
@@ -126,6 +82,14 @@ class Layer:
         for i in self.neuronList:
             i.activationFunction = activationFunction
 
+class softmaxLayer(Layer):
+    def __init__(self):
+        super().__init__(layers=1, activationFunction="Identity")
+
+    def runLayer(self):
+        print(self.layerOutput)
+        self.layerOutput = ac.softmax(self.previousLayer.layerOutput)
+        print(self.layerOutput)
 
 class NeuronLayer(Layer):
 
@@ -139,6 +103,7 @@ class NeuronLayer(Layer):
         """
         self.layerOutput = []
         for neuron in self.neuronList:
+
             self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
 
     def updateWeights(self, learningRate, networkOutput, expectedOutput):
@@ -159,7 +124,7 @@ class NeuronLayer(Layer):
 
 
 class inputLayer(Layer):
-    def __init__(self, layerSize, activationFunction):
+    def __init__(self, layerSize, activationFunction = ac.identity):
         super().__init__(layerSize, activationFunction)
 
     def runLayer(self, inputData):
@@ -232,7 +197,7 @@ class Network:
         for layer in self.layers[1:]:
             layer.runLayer()
 
-        return self.layers[-1].layerOutput[0]
+        return self.layers[-1].layerOutput
 
     def add(self, layerToAdd):
         """
@@ -247,7 +212,7 @@ class Network:
             self.layers[-2].followingLayer = self.layers[-1]
 
             #for neuron in self.layers[-1].neuronList:
-             #   neuron.defineWeights(len(self.layers[-2].neuronList))
+             #   neuron.defineWeights(len( self.layers[-2].neuronList))
 
     def runNetwork(self, inputData, learningRate, epochs):
         """
@@ -303,9 +268,9 @@ class Network:
         predefined weight.
         :return:
         """
-        for layer in range(len(self.layers)):
+        for layer in range(1, len(self.layers)):
             for neuron in range(len(self.layers[layer].neuronList)):
-                self.layers[layer].neuronList[neuron].weights = presetWeights[layer][neuron]
+                self.layers[layer].neuronList[neuron].weights = presetWeights[layer-1][neuron]
 
     def meanSquaredLoss(self, output, actual):
         """
