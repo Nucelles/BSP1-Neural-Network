@@ -83,6 +83,4 @@ def derivitiveSigmoid(x):
     :return:
     """
 
-    derivitiveX = 1 / (1 + math.exp(-x))
-
-    return derivitiveX * (1 - derivitiveX)
+    return x * (1 - x)
