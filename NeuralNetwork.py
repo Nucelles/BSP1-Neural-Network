@@ -2,22 +2,24 @@
 Hello World
 """
 
-"""
-NEURON CLASSES
-"""
 from random import random
 import numpy as np
 import math
 from statistics import mean
 import ActivationFunctions as ac
+from time import perf_counter
+from datetime import datetime
+import pickle
 
 
 class Neuron:
 
     def __init__(self, numberOfInputs, activationFunction):
+        self.debug = False
         self.activationFunction = activationFunction
         self.weights = [random() for i in range(numberOfInputs)]
-        self.bias = 1
+        self.oldWeights = self.weights
+        self.bias = 0
         self.output = 0
 
     def defineWeights(self, numberOfWeights):
@@ -37,6 +39,8 @@ class Neuron:
         dotOutput = self.applyDot(inputs)
         output = self.applyActivationFunction(dotOutput)
 
+        self.output = output
+
         return output
 
     def applyDot(self, inputs):
@@ -47,15 +51,32 @@ class Neuron:
         """
 
         dotOutput = 0
+        if self.debug:
+            print("Inputs = {}".format(inputs))
+            print("Weights = {}".format(self.weights))
 
+        debugPrint = ["Weighted Sum = ("]
         for currInput in range(len(inputs)):
+            if self.debug:
+                dotOutput += inputs[currInput] * self.weights[currInput]
+                debugPrint.append("{}*{} + ".format(inputs[currInput], self.weights[currInput]))
+            else:
 
-            dotOutput += inputs[currInput] * self.weights[currInput]
+                dotOutput += inputs[currInput] * self.weights[currInput]
 
-        return dotOutput
+        debugPrint.append("{}) = {}".format(self.bias, dotOutput))
+        if self.debug: print(("".join(debugPrint)))
+
+        return dotOutput + self.bias
 
     def applyActivationFunction(self, dotOutput):
-        return self.activationFunction(dotOutput)
+        if self.debug:
+            act = self.activationFunction(dotOutput)
+            print("Activation Function Output = {}".format(act))
+            return act
+        else:
+            return self.activationFunction(dotOutput)
+
 
 """
 Below is the definition of the layer class 
@@ -69,9 +90,11 @@ class Layer:
         self.layerOutput = []
         self.previousLayer = None
         self.followingLayer = None
+        self.activationFunction = activationFunction
 
+    def initiateWeights(self):
         for i in range(self.layers):
-            self.neuronList.append(Neuron(layers, activationFunction))
+            self.neuronList.append(Neuron(self.previousLayer.layers, self.activationFunction))
 
     def changeActivationFunction(self, activationFunction):
         """
@@ -82,92 +105,142 @@ class Layer:
         for i in self.neuronList:
             i.activationFunction = activationFunction
 
+    def updateWeights(self, learningRate, expectedOutput, debug):
+
+        for neuron in range(len(self.neuronList)): # Will loop through the range of neuronList
+            currNeuron = self.neuronList[neuron] # Will assign the currentNeuron being worked on
+
+            if debug:
+                print()
+
+            for weight in range(len(currNeuron.weights)): # Will loop through the range of weights in the currentNeuron
+
+                d_E_d_Neuron = self.neuronToError(neuron, expectedOutput, debug, True)
+                d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currNeuron.output)
+                d_NeuronOutput_d_PreviousNeuronInput = self.previousLayer.layerOutput[weight]
+                d_E_d_Weight = (d_E_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_PreviousNeuronInput)
+                weightChange = learningRate * d_E_d_Weight
+
+                oldWeight = currNeuron.weights[weight]
+                currNeuron.weights[weight] -= weightChange
+
+                if debug:
+                    print("(Neuron {}, Weight {}), Weight = {}".format(neuron, weight, oldWeight))
+                    print("Weight Change = ({} * ({} * {} * {})".format(learningRate, d_E_d_Neuron, d_Neuron_d_NeuronOutput, d_NeuronOutput_d_PreviousNeuronInput))
+                    print("              = ({} * {})".format(learningRate, d_E_d_Weight))
+                    print("              =", weightChange)
+
+
+                # Will update the weight by applying the derivative Chain rule, shown below.
+                # w := w - learningRate*[d_E/d_ConnectingNeuron * d_OutputOfConnectingNeuron/d_WeightedSumOfConnectingNeuron * d_WeighedSumOfTheConnectingNeuron/d_WeightBeingUpdated]
+                # w := w - learningRate * [Derivative Of Current Neuron towards Error * Derivative of the Activation Function * Output of Connecting Weight Neuron]
+
 class softmaxLayer(Layer):
-    def __init__(self):
-        super().__init__(layers=1, activationFunction="Identity")
+    def __init__(self, layer):
+        super().__init__(layers=layer, activationFunction=ac.identity)
 
     def runLayer(self):
-        print(self.layerOutput)
-        self.layerOutput = ac.softmax(self.previousLayer.layerOutput)
-        print(self.layerOutput)
+        neuronLayerOutput = []
+        for neuron in self.neuronList:
+            neuronLayerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
+
+        neuronLayerOutput = ac.softmax(neuronLayerOutput)
+
+        for softmaxValue in neuronLayerOutput:
+            self.layerOutput.append(softmaxValue)
+
 
 class NeuronLayer(Layer):
 
     def __init__(self, layers, activationFunction):
         super().__init__(layers, activationFunction)
 
-    def runLayer(self):
+    def runLayer(self, debug):
         """
         This function will loop through all the neurons of the layer and activate the runNeuron() function.
         :return:
         """
         self.layerOutput = []
         for neuron in self.neuronList:
-
+            if debug:
+                print("\n", neuron)
+                neuron.debug = True
             self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
+            neuron.debug = False
 
-    def updateWeights(self, learningRate, networkOutput, expectedOutput):
-        """
-        This function is part of the back-propagation code. This function should run through each neuron & update their
-        base weights and biases
-        :param learningRate: flaot, the defined learning rate of the neural network
-        :param networkOutput: float, the output of the neural network
-        :param expectedOutput: float, this is the expected output of the neural network
-        :return:
-        """
-        for n in range(len(self.neuronList)):
-            for i in range(len(self.neuronList[n].weights)):
-                Part1 = (-2 * (networkOutput[0] - expectedOutput))
-                Part2 = (self.followingLayer.neuronList[i].weights[i] * derivitiveSigmoid(sum(self.followingLayer.layerOutput)))
-                Part3 = (self.previousLayer.layerOutput[i] * derivitiveSigmoid(self.layerOutput[0]))
-                self.neuronList[n].weights[i] -= learningRate * Part1 * Part2 * Part3
 
+    def neuronToError(self, position, predictedOutput, debug, first):
+        sumOfNeuron = []
+        if first: debug = False
+        for neuron in range(len(self.followingLayer.neuronList)):
+            currentNeuron = self.followingLayer.neuronList[neuron]
+
+            d_Error_d_Neuron = self.followingLayer.neuronToError(neuron, predictedOutput, debug, False)
+            d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currentNeuron.output)
+            d_NeuronOutput_d_WeightNeuron = currentNeuron.oldWeights[position]
+            neuronDerivative = d_Error_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_WeightNeuron
+
+            sumOfNeuron.append(neuronDerivative)
+            # d_Error/d_FollowingLayerNeuron * derivative activation of following layer neuron * weightConnecting to Following Layer
+
+            if debug:
+                #print(currentNeuron)
+                print("Error of Neuron = ({} * {} * {})".format(d_Error_d_Neuron, d_Neuron_d_NeuronOutput, d_NeuronOutput_d_WeightNeuron))
+                print("                = {}".format(neuronDerivative))
+
+        if debug: print("Sum of Neuron Derivatives = {}\n".format(sum(sumOfNeuron)))
+        return sum(sumOfNeuron)
 
 class inputLayer(Layer):
     def __init__(self, layerSize, activationFunction = ac.identity):
         super().__init__(layerSize, activationFunction)
 
-    def runLayer(self, inputData):
+        self.neuronList = [Neuron(layerSize, activationFunction) for i in range(layerSize)]
+
+    def runLayer(self, inputData, debug):
         """
         This function will loop through all the neurons of the layer, but instead of running the runNeuron layer it will
         change the output of each neuron.(The number of neurons in the layer must match the size of the inputData array)
         :param inputData: list of floats, This is the unchanged input data that will be feed to the neuron.
-        :return:
+        :return;
         """
+        if debug:
+            print(inputData)
+            print(range(self.layers))
+
         for i in range(self.layers):
             self.neuronList[i].output = inputData[i]
             self.layerOutput.append(inputData[i])
+
+
+
 
 class outputLayer(Layer):
     def __init__(self, layerSize, activationFunction):
         super().__init__(layerSize, activationFunction)
 
-    def runLayer(self):
+    def runLayer(self, debug):
         """
         This function will loop through all the neurons of the layer and activate the runNeuron() function.
         :return:
         """
         self.layerOutput = []
         for neuron in self.neuronList:
+            if debug:
+                print("\n", neuron)
+                neuron.debug = True
             self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
-
-    def updateWeights(self, learningRate, networkOutput, expectedOutput):
-        """
-        This function is part of the back-propagation code. This function should run through each neuron & update their
-        base weights and biases
-        :param learningRate: flaot, the defined learning rate of the neural network
-        :param networkOutput: float, the output of the neural network
-        :param expectedOutput: float, this is the expected output of the neural network
-        :return:
-        """
-        for neuron in self.neuronList:
-            for i in range(len(neuron.weights)):
-                Part1 = (-2 * (networkOutput - expectedOutput))
-                Part3 = (self.previousLayer.layerOutput[i] * derivitiveSigmoid(self.layerOutput))
-                neuron.weights[i] -= learningRate * Part1 * Part3
+            neuron.debug = False
 
 
+    def neuronToError(self, position, preictedOutput, debug, first):
+        error = self.layerOutput[position] - preictedOutput[position]
+        if debug:
+            # print(currentNeuron)
+            print("Error of Output Neuron = ({} - {})".format(self.layerOutput[position], preictedOutput[position]))
+            print("                = {}\n".format(error))
 
+        return error
 
 
 """
@@ -185,16 +258,23 @@ class Network:
                 assert issubclass(type(i), Layer)
                 self.layers.append(i)
 
+    def compile(self):
+        for layer in self.layers[1:]:
+            layer.initiateWeights()
 
-    def feedNetwork(self, x):
+    def feedNetwork(self, x, debug):
         """
         This function will feed an input through the network once, without back-propagation
         :param x: list of floats, this is the input for the network
         :return:
         """
+        if debug:
+            print("---------------FORWARD PROPAGATION---------------")
+            print("----- Running", self.layers[0], "-----")
+        self.layers[0].runLayer(x)
 
-        self.layers[0] = self.layers[0].runLayer(x)
         for layer in self.layers[1:]:
+            if debug: print("----- Running", layer, "-----")
             layer.runLayer()
 
         return self.layers[-1].layerOutput
@@ -211,55 +291,84 @@ class Network:
             self.layers[-1].previousLayer = self.layers[-2]
             self.layers[-2].followingLayer = self.layers[-1]
 
-            #for neuron in self.layers[-1].neuronList:
-             #   neuron.defineWeights(len( self.layers[-2].neuronList))
 
-    def runNetwork(self, inputData, learningRate, epochs):
+    def runNetwork(self, inputData, learningRate, epochs, debug):
         """
         This function will receive the training set and run the neural network.
         :param data: This is the list of data that will be fed to the neural network.
         :return:
         """
-        if len(self.layers[0].neuronList) != len(inputData[0]):
+        epochTotal = 0
+        if len(self.layers[0].neuronList) == len(inputData[0][0]):
 
+            totalTime = 0
             for currentEpoch in range(epochs):
-                for currentX, predictedY in zip(inputData[0], inputData[1]):
+                epochTimeIn = perf_counter()
+                print("Epoch {}".format(currentEpoch))
 
-                    self.layers[0] = self.layers[0].runLayer(currentX)
+                if debug :
+                    print("\n\n","|"*35, currentEpoch, "|"*35)
+                    print("---------------FORWARD PROPAGATION---------------")
+                for currentInput in inputData:
+                    currentX, predictedY = currentInput[0], currentInput[1]
+
+                    if debug: print("\n----- Running", self.layers[0], "-----")
+                    self.layers[0].runLayer(currentX, debug=debug)
 
                     for layer in self.layers[1:]:
-                        layer.runLayer()
+                        if debug: print("\n----- Running", layer, "-----")
+                        layer.runLayer(debug=debug)
 
                     networkOutput = self.layers[-1].layerOutput
+                    if debug:
+                        print("Network Output for Epoch {} = {}".format(currentEpoch, networkOutput))
+                        print("\n---------------BACKWARDS PROPAGATION---------------")
 
-                    """
                     for layer in self.layers[1:]:
-                        layer.updateWeights(learningRate, networkOutput, predictedY)
-                    """
+                        for neuron in layer.neuronList:
+                            neuron.oldWeights = neuron.weights
 
+                    for layer in self.layers[1:]:
+                        if debug: print("\n----- Backpropagating", layer, "-----")
+                        layer.updateWeights(learningRate, predictedY, debug)
+
+                    self.layers[0].layerOutput = []
+
+                epochTimeOut = perf_counter()
+                epochTotal = epochTimeOut - epochTimeIn
+                print("Time Taken = {}\n".format(epochTotal))
+
+                if currentEpoch != epochs - 1:
+                    totalTime += epochTotal
+                else:
+                    print("Final Time (in Seconds) = {}".format(totalTime + epochTotal))
+
+                """
                 if epochs % 10 == currentEpoch:
-                    print("At epoch %" % currentEpoch)
+                    print("-|-|-|-|-At epoch {}".format(currentEpoch))
                     yPredictions = [self.feedNetwork(x) for x in inputData[0]]
                     loss = self.meanSquaredLoss(networkOutput, yPredictions)
-
+                """
         else:
             print("The amount of neurons in the input layer does not match the size of the x input.")
+            print("The length of the inputLayer is", len(self.layers[0].neuronList))
+            print("The length of the x_input is", len(inputData[0]))
 
-    def saveWeights(self):
+
+
+    def saveNetwork(self, model):
         """
-        This function will "save" the weights of each layer.
+        This function will pickle the object, and save it to a /model folder.
         :return:
         """
-        networkWeights = []
-        layerWeights = []
+        name = (datetime.now().strftime("model_%d-%m-%Y_%I-%M-%S_%p"))
+        fullFileName = 'model\{}.obj'.format(name)
+        object = model
 
-        for layer in self.layers:
-            for neuron in layer.neuronList:
-                layerWeights.append(neuron.weights)
-            networkWeights.append(layerWeights)
-            layerWeights = []
+        with open(fullFileName, 'wb') as objectFile:
+            pickle.dump(object, objectFile)
 
-        return networkWeights
+
 
     def inputWeights(self, presetWeights):
         """
@@ -271,6 +380,7 @@ class Network:
         for layer in range(1, len(self.layers)):
             for neuron in range(len(self.layers[layer].neuronList)):
                 self.layers[layer].neuronList[neuron].weights = presetWeights[layer-1][neuron]
+
 
     def meanSquaredLoss(self, output, actual):
         """
