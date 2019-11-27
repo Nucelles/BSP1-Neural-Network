@@ -16,6 +16,7 @@ class Neuron:
 
     def __init__(self, numberOfInputs, activationFunction):
         self.debug = False
+        self.partialDerivative = None
         self.activationFunction = activationFunction
         self.weights = [random() for i in range(numberOfInputs)]
         self.oldWeights = self.weights
@@ -115,7 +116,7 @@ class Layer:
 
             for weight in range(len(currNeuron.weights)): # Will loop through the range of weights in the currentNeuron
 
-                d_E_d_Neuron = self.neuronToError(neuron, expectedOutput, debug, True)
+                d_E_d_Neuron = currNeuron.partialDerivative
                 d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currNeuron.output)
                 d_NeuronOutput_d_PreviousNeuronInput = self.previousLayer.layerOutput[weight]
                 d_E_d_Weight = (d_E_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_PreviousNeuronInput)
@@ -168,28 +169,22 @@ class NeuronLayer(Layer):
             self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
             neuron.debug = False
 
-
-    def neuronToError(self, position, predictedOutput, debug, first):
+    def calculatePartialDerivatives(self, predictedOutput, debug):
         sumOfNeuron = []
-        if first: debug = False
-        for neuron in range(len(self.followingLayer.neuronList)):
-            currentNeuron = self.followingLayer.neuronList[neuron]
+        for neuron in range(len(self.neuronList)):
+            currentNeuron = self.neuronList[neuron]
+            for weight in range(self.followingLayer.layers):
 
-            d_Error_d_Neuron = self.followingLayer.neuronToError(neuron, predictedOutput, debug, False)
-            d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currentNeuron.output)
-            d_NeuronOutput_d_WeightNeuron = currentNeuron.oldWeights[position]
-            neuronDerivative = d_Error_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_WeightNeuron
+                d_Error_d_Neuron = self.followingLayer.neuronList[weight].partialDerivative
+                d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currentNeuron.output)
+                d_NeuronOutput_d_WeightNeuron = currentNeuron.oldWeights[neuron]
 
-            sumOfNeuron.append(neuronDerivative)
-            # d_Error/d_FollowingLayerNeuron * derivative activation of following layer neuron * weightConnecting to Following Layer
+                neuronDerivative = d_Error_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_WeightNeuron
 
-            if debug:
-                #print(currentNeuron)
-                print("Error of Neuron = ({} * {} * {})".format(d_Error_d_Neuron, d_Neuron_d_NeuronOutput, d_NeuronOutput_d_WeightNeuron))
-                print("                = {}".format(neuronDerivative))
+                sumOfNeuron.append(neuronDerivative)
 
-        if debug: print("Sum of Neuron Derivatives = {}\n".format(sum(sumOfNeuron)))
-        return sum(sumOfNeuron)
+            currentNeuron.partialDerivative = sum(sumOfNeuron)
+            sumOfNeuron.clear()
 
 class inputLayer(Layer):
     def __init__(self, layerSize, activationFunction = ac.identity):
@@ -232,16 +227,16 @@ class outputLayer(Layer):
             self.layerOutput.append(neuron.runNeuron(self.previousLayer.layerOutput))
             neuron.debug = False
 
+    def calculatePartialDerivatives(self, predictedOutput, debug):
+        for neuron in range(len(self.neuronList)):
+            currentNeuron = self.neuronList[neuron]
+            error = self.layerOutput[neuron] - predictedOutput[neuron]
+            currentNeuron.partialDerivative = error
 
-    def neuronToError(self, position, preictedOutput, debug, first):
-        error = self.layerOutput[position] - preictedOutput[position]
-        if debug:
-            # print(currentNeuron)
-            print("Error of Output Neuron = ({} - {})".format(self.layerOutput[position], preictedOutput[position]))
-            print("                = {}\n".format(error))
-
-        return error
-
+            if debug:
+                # print(currentNeuron)
+                print("Error of Output Neuron = ({} - {})".format(self.layerOutput[neuron], predictedOutput[neuron]))
+                print("                = {}\n".format(error))
 
 """
 Below is the definition of the network class
@@ -320,41 +315,46 @@ class Network:
                         layer.runLayer(debug=debug)
 
                     networkOutput = self.layers[-1].layerOutput
+
                     if debug:
                         print("Network Output for Epoch {} = {}".format(currentEpoch, networkOutput))
                         print("\n---------------BACKWARDS PROPAGATION---------------")
 
-                    for layer in self.layers[1:]:
-                        for neuron in layer.neuronList:
-                            neuron.oldWeights = neuron.weights
-
-                    for layer in self.layers[1:]:
-                        if debug: print("\n----- Backpropagating", layer, "-----")
-                        layer.updateWeights(learningRate, predictedY, debug)
+                    self.backpropogation(learningRate, predictedY, debug)
 
                     self.layers[0].layerOutput = []
 
                 epochTimeOut = perf_counter()
                 epochTotal = epochTimeOut - epochTimeIn
-                print("Time Taken = {}\n".format(epochTotal))
+                print("Time Taken = {0:4.3}\n".format(epochTotal))
 
                 if currentEpoch != epochs - 1:
                     totalTime += epochTotal
                 else:
                     print("Final Time (in Seconds) = {}".format(totalTime + epochTotal))
+                    self.printNetwork()
 
-                """
-                if epochs % 10 == currentEpoch:
-                    print("-|-|-|-|-At epoch {}".format(currentEpoch))
-                    yPredictions = [self.feedNetwork(x) for x in inputData[0]]
-                    loss = self.meanSquaredLoss(networkOutput, yPredictions)
-                """
         else:
             print("The amount of neurons in the input layer does not match the size of the x input.")
             print("The length of the inputLayer is", len(self.layers[0].neuronList))
             print("The length of the x_input is", len(inputData[0]))
 
 
+    def backpropogation(self, learningRate, predictedY, debug):
+        rangeReverse = list(range(1, len(self.layers)))
+        rangeReverse.reverse()
+        for layer in rangeReverse:
+            self.layers[layer].calculatePartialDerivatives(predictedY, debug)
+
+        for layer in self.layers[1:]:
+            for neuron in layer.neuronList:
+                neuron.oldWeights = neuron.weights
+
+        for layer in self.layers[1:]:
+            if debug: print("\n----- Backpropagating", layer, "-----")
+            layer.updateWeights(learningRate, predictedY, debug)
+
+        return
 
     def saveNetwork(self, model):
         """
@@ -368,6 +368,16 @@ class Network:
         with open(fullFileName, 'wb') as objectFile:
             pickle.dump(object, objectFile)
 
+
+    def printNetwork(self):
+
+        print(self)
+        for l in self.layers:
+            print("    ", l)
+            for n in l.neuronList:
+                print("        ", n)
+                print("             partialDerivative = {}".format(n.partialDerivative))
+            print()
 
 
     def inputWeights(self, presetWeights):

@@ -36,7 +36,7 @@ import pickle
 
 """
 MNIST TEST
-"""
+
 
 model = nn.Network()
 
@@ -45,7 +45,7 @@ model.add(layerToAdd=nn.NeuronLayer(512, ac.sigmoid))
 model.add(layerToAdd=nn.outputLayer(10, ac.sigmoid))
 model.compile()
 
-
+"""
 
 model = nn.Network()
 model.add(layerToAdd=nn.inputLayer(3, ac.sigmoid))
@@ -53,6 +53,7 @@ model.add(layerToAdd=nn.NeuronLayer(2, ac.sigmoid))
 model.add(layerToAdd=nn.NeuronLayer(2, ac.sigmoid))
 model.add(layerToAdd=nn.outputLayer(2, ac.sigmoid))
 model.compile()
+model.printNetwork()
 
 presetWeights = [[[0.1, 0.3, 0.4], [0.2, 0.4, 0.6]], [[0.7, 0.9], [0.8, 0.1]], [[0.2, 0.4], [0.3, 0.5]]]
 model.inputWeights(presetWeights)
@@ -60,7 +61,7 @@ model.inputWeights(presetWeights)
 inputData = [[[1, 2, 4], [0.1, 0.05]]]
 
 
-model.runNetwork(inputData=inputData, learningRate=0.1, epochs=100, debug=False)
+model.runNetwork(inputData=inputData, learningRate=0.1, epochs=1, debug=True)
 
 
 
