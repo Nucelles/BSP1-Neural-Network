@@ -4,16 +4,77 @@
 
 import NeuralNetwork as nn
 import ActivationFunctions as ac
+import _pickle as cPickle
+import gzip
+
+
+
+
+
+"""
+ATTEMPT 1
+def load_data():
+    data_folder = "/data/"
+    path = data_folder + 'train_images.gz'
+    f = gzip.open(path, 'rb')
+    print(f)
+    a = cPickle.load(f)
+    print(a)
+    f.close()
+
+    X_train, y_train = training_data[0], training_data[1]
+    print(X_train.shape, y_train.shape)
+
+load_data()
+
+
+"""
+
+# Attempt 2
+
+import pickle
+
+"""
+MNIST TEST
+"""
+
+model = nn.Network()
+
+model.add(layerToAdd=nn.inputLayer(784, ac.sigmoid))
+model.add(layerToAdd=nn.NeuronLayer(512, ac.sigmoid))
+model.add(layerToAdd=nn.outputLayer(10, ac.sigmoid))
+model.compile()
+
+
+
+model = nn.Network()
+model.add(layerToAdd=nn.inputLayer(3, ac.sigmoid))
+model.add(layerToAdd=nn.NeuronLayer(2, ac.sigmoid))
+model.add(layerToAdd=nn.NeuronLayer(2, ac.sigmoid))
+model.add(layerToAdd=nn.outputLayer(2, ac.sigmoid))
+model.compile()
+
+presetWeights = [[[0.1, 0.3, 0.4], [0.2, 0.4, 0.6]], [[0.7, 0.9], [0.8, 0.1]], [[0.2, 0.4], [0.3, 0.5]]]
+model.inputWeights(presetWeights)
+
+inputData = [[[1, 2, 4], [0.1, 0.05]]]
+
+
+model.runNetwork(inputData=inputData, learningRate=0.1, epochs=100, debug=False)
+
+
+
 
 """
 This is the Test Case for the first link, https://enlight.nyc/projects/neural-network/
 """
-""""""
+"""
 modelB = nn.Network()
 
 modelB.add(layerToAdd=nn.inputLayer(2, ac.sigmoid))
 modelB.add(layerToAdd=nn.NeuronLayer(3, ac.sigmoid))
 modelB.add(layerToAdd=nn.outputLayer(1, ac.sigmoid))
+modelB.compile()
 
 presetWeights = [[[.2, .6], [.1, .8], [.3, .7]], [[.4, .5, .9]]]
 modelB.inputWeights(presetWeights)
@@ -23,17 +84,18 @@ print("Expected = 0.8579443067")
 print("Network =", modelB.feedNetwork([2, 9]))
 print("")
 
-
+"""
 
 """
 This is the Test Case for the second link, https://victorzhou.com/blog/intro-to-neural-networks/
-"""
+
 
 modelA = nn.Network()
 
 modelA.add(layerToAdd=nn.inputLayer(2))
 modelA.add(layerToAdd=nn.NeuronLayer(2, ac.sigmoid))
 modelA.add(layerToAdd=nn.outputLayer(1, ac.sigmoid))
+modelA.compile()
 
 presetWeights = [[[0, 1], [0, 1]], [[0, 1]]]
 modelA.inputWeights(presetWeights)
@@ -44,16 +106,27 @@ print("Network  =", modelA.feedNetwork([2, 3]))
 
 
 """
-Test of softmax 
 """
-print("Test Case 3: Softmax")
+Test of softmax 
+
+print("\nTest Case 3: Softmax")
 modelC = nn.Network()
 
 modelC.add(layerToAdd=nn.inputLayer(2))
 modelC.add(layerToAdd=nn.NeuronLayer(3, ac.sigmoid))
-modelC.add(layerToAdd=nn.softmaxLayer())
+modelC.add(layerToAdd=nn.softmaxLayer(3))
+modelC.compile()
 
 print("Network Output =", modelC.feedNetwork([10, .235]))
+"""
+"""
+"""
+
+"""
+BACKPROPOGATION TEST
+"""
+
+
 
 """
 print("Test Case 4: Backprop")
