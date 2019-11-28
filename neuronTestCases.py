@@ -61,7 +61,7 @@ model.inputWeights(presetWeights)
 inputData = [[[1, 2, 4], [0.1, 0.05]]]
 
 
-model.runNetwork(inputData=inputData, learningRate=0.1, epochs=1, debug=True)
+model.runNetwork(inputData=inputData, learningRate=0.1, epochs=1, debug=False)
 
 
 

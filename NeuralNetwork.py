@@ -173,17 +173,29 @@ class NeuronLayer(Layer):
         sumOfNeuron = []
         for neuron in range(len(self.neuronList)):
             currentNeuron = self.neuronList[neuron]
+            #print(currentNeuron)
+
+
             for weight in range(self.followingLayer.layers):
 
                 d_Error_d_Neuron = self.followingLayer.neuronList[weight].partialDerivative
                 d_Neuron_d_NeuronOutput = ac.derivitiveSigmoid(currentNeuron.output)
-                d_NeuronOutput_d_WeightNeuron = currentNeuron.oldWeights[neuron]
+                d_NeuronOutput_d_WeightNeuron = self.followingLayer.neuronList[weight].weights[neuron]
 
                 neuronDerivative = d_Error_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_WeightNeuron
 
                 sumOfNeuron.append(neuronDerivative)
+                if debug:
+                    print("Current Iteration: {}".format(weight))
+                    print(self.followingLayer.neuronList[weight].weights)
+                    print("Neuron Iteration Partial = ({} * {} * {})".format(d_Error_d_Neuron, d_Neuron_d_NeuronOutput, d_NeuronOutput_d_WeightNeuron))
+                    print("                         = ({})".format(neuronDerivative))
+                    print("                         =", neuronDerivative,"\n")
 
             currentNeuron.partialDerivative = sum(sumOfNeuron)
+            if debug:
+                print("Total Sum = {}".format(sumOfNeuron))
+                print("          =", sum(sumOfNeuron))
             sumOfNeuron.clear()
 
 class inputLayer(Layer):
@@ -331,14 +343,13 @@ class Network:
                 if currentEpoch != epochs - 1:
                     totalTime += epochTotal
                 else:
-                    print("Final Time (in Seconds) = {}".format(totalTime + epochTotal))
+                    print("Final Time (in Seconds) = {}".format(totalTime + epochTotal), "\n")
                     self.printNetwork()
 
         else:
             print("The amount of neurons in the input layer does not match the size of the x input.")
             print("The length of the inputLayer is", len(self.layers[0].neuronList))
             print("The length of the x_input is", len(inputData[0]))
-
 
     def backpropogation(self, learningRate, predictedY, debug):
         rangeReverse = list(range(1, len(self.layers)))
