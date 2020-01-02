@@ -35,6 +35,7 @@ class Layer:
         self.previousLayer = None
         self.followingLayer = None
         self.activationFunction = activationFunction
+        self.derivActivation = ac.derivitiveSigmoid
 
     def runLayer(self, debug = False):
         """This function will loop through all the neurons of the layer and activate the runNeuron() function.
@@ -91,7 +92,7 @@ class Layer:
             for weight in range(len(currNeuron.weights)): # Will loop through the range of weights in the currentNeuron
 
                 d_E_d_Neuron = currNeuron.partialDerivative
-                d_Neuron_d_NeuronOutput = ac.derivativeLeakyReLU(currNeuron.output)
+                d_Neuron_d_NeuronOutput = self.derivActivation(currNeuron.output)
                 d_NeuronOutput_d_PreviousNeuronInput = self.previousLayer.layerOutput[weight]
                 d_E_d_Weight = (d_E_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_PreviousNeuronInput)
                 weightChange = learningRate * d_E_d_Weight
@@ -169,7 +170,7 @@ class neuronLayer(Layer):
             for weight in range(self.followingLayer.layers):
 
                 d_Error_d_Neuron = self.followingLayer.neuronList[weight].partialDerivative
-                d_Neuron_d_NeuronOutput = ac.derivativeLeakyReLU(self.followingLayer.layerOutput[weight])
+                d_Neuron_d_NeuronOutput = self.derivActivation(self.followingLayer.layerOutput[weight])
                 d_NeuronOutput_d_WeightNeuron = self.followingLayer.neuronList[weight].weights[neuron]
 
                 neuronDerivative = d_Error_d_Neuron * d_Neuron_d_NeuronOutput * d_NeuronOutput_d_WeightNeuron

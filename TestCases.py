@@ -5,110 +5,29 @@
 import NeuralNetwork as nn
 import ActivationFunctions as ac
 import Layer as layer
+import PreProcesssing as pre
 import gzip
 import numpy as np
 import matplotlib.pyplot as plt
 import random
 import pickle
 
-def unPickleModel(location):
-    """Unpickles a model in obj format and returns it.
-
-    :param location: location of the model in the directory
-    :type location: str
-    :return: Returns the unpickled object as a Network class object
-    :rtype: Network
-    """
-    importModel = open(location, "rb")
-    model = pickle.load(importModel)
-
-    return model
-
-def loadFromIDX3(location, imageHeight, imageWidth, numberOfImages):
-    datasetFile = gzip.open(location, "r")
-    datasetFile.read(16)
-    unitLength = imageHeight*imageWidth
-
-    data = []
-
-    i = 0
-    while i < numberOfImages:
-        currentImage = datasetFile.read(unitLength)
-        currentImage = np.frombuffer(currentImage, dtype=np.uint8).astype(np.float32)
-        currentImage = currentImage.reshape(1, imageHeight, imageWidth, 1)
-        #print(currentImage)
-        image = []
-        for row in currentImage:
-            for value in row:
-                for singleValue in value:
-                    for flo in singleValue:
-                        image.append(flo/255)
-
-        data.append(image)
-        i += 1
-
-    return data
-
-def loadFromIDX1(location, numberOfLabels):
-    datasetFile = gzip.open(location, "r")
-    datasetFile.read(8)
-
-    i = 0
-    labels = []
-    while i < numberOfLabels:
-        label = datasetFile.read(1)
-        label = np.frombuffer(label, dtype=np.uint8).astype(np.int64)
-        labels.append(createLabel(label[0]))
-        i += 1
-
-    return labels
-
-def showImageFrom1D(img):
-    cur = 1
-    wholeImage = []
-    row = []
-    for i in img:
-
-        if cur == 28:
-            cur = 1
-            wholeImage.append(row)
-            #print(row)
-            row = []
-        else:
-            cur += 1
-            #print(i)
-            row.append(i)
-            #print(row)
-
-    #print(wholeImage)
-
-    showImageNumpy(wholeImage)
-
-
-
-def showImageNumpy(img):
-    image = np.asarray(img).squeeze()
-    plt.imshow(image)
-    plt.show()
-
-def createLabel(label):
-    formattedLabel = [0 for i in range(10)]
-    formattedLabel[label] = 1
-
-    return formattedLabel
-
 
 # Preprocess the dataset into a readable format
 
 loc = "data/"
-numberOfImages = 1500
+numberOfImages = 15000
 
 print("Preprocessing Dataset...")
 print("    Number of Images = {}".format(numberOfImages))
-imageDataset = loadFromIDX3(loc + "train_images.gz", 28, 28, numberOfImages)
-labelDataset = loadFromIDX1(loc + "train_labels.gz", numberOfImages)
+imageDataset = pre.loadFromIDX3(loc + "train_images.gz", 28, 28, numberOfImages)
+labelDataset = pre.loadFromIDX1(loc + "train_labels.gz", numberOfImages)
 
-trainingDataset = [[imageDataset[i], labelDataset[i]] for i in range(numberOfImages)]
+dataset = [[imageDataset[i], labelDataset[i]] for i in range(numberOfImages)]
+random.shuffle(dataset)
+trainingDataset = dataset[:1000]
+print(len(trainingDataset))
+
 print("Preprocessing Done!")
 
 
@@ -124,16 +43,19 @@ print("1st Image After-shuffle Label = {}".format(trainingDataset[0][1]))
 """
 
 
-learningRate = 0.0005
-epochs = 10
+learningRate = 0.05
+epochs = 5
 debug = False
+activation = ac.sigmoid
+
 
 print("Creating Model...")
 model = nn.Network()
 
-model.add(layerToAdd=layer.inputLayer(784, ac.leakyReLu))
-model.add(layerToAdd=layer.neuronLayer(512, ac.leakyReLu))
-model.add(layerToAdd=layer.outputLayer(10, ac.leakyReLu))
+model.add(layerToAdd=layer.inputLayer(784, activation))
+model.add(layerToAdd=layer.neuronLayer(256, activation))
+model.add(layerToAdd=layer.neuronLayer(128, activation))
+model.add(layerToAdd=layer.outputLayer(10, activation))
 print("Compiling Model...")
 model.compile()
 

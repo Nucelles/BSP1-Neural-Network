@@ -88,7 +88,7 @@ class Network:
         :param epochs: The amount of times the neural network will loop over the training set
         :type epochs: int
         :param debug: Boolean flag for turning on debug mode
-        :type debug: bool, optional
+        :type debug: bool, optional;
         |
         """
 
@@ -98,7 +98,7 @@ class Network:
 
 
             totalTime = 0
-            for currentEpoch in range(epochs):
+            for currentEpoch in tqdm(range(epochs), desc="Epoch"):
                 epochTimeIn = perf_counter()
 
                 print("Epoch {}".format(currentEpoch))
@@ -109,7 +109,7 @@ class Network:
 
                 inputNum = 1
                 shuffle(inputData)
-                for currentInput in inputData:
+                for currentInput in tqdm(inputData, desc="Input"):
                     #print("Current Input # = {}".format(inputNum))
                     inputNum += 1
                     currentX, predictedY = currentInput[0], currentInput[1]
