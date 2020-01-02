@@ -96,9 +96,10 @@ class Network:
 
         if len(self.layers[0].neuronList) == len(inputData[0][0]):
 
-
+            epochResults = []
             totalTime = 0
             for currentEpoch in tqdm(range(epochs), desc="Epoch"):
+
                 epochTimeIn = perf_counter()
 
                 print("Epoch {}".format(currentEpoch))

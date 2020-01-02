@@ -18,14 +18,14 @@ import pickle
 loc = "data/"
 numberOfImages = 15000
 
-print("Preprocessing Dataset...")
+print("Pre-processing Dataset...")
 print("    Number of Images = {}".format(numberOfImages))
 imageDataset = pre.loadFromIDX3(loc + "train_images.gz", 28, 28, numberOfImages)
 labelDataset = pre.loadFromIDX1(loc + "train_labels.gz", numberOfImages)
 
 dataset = [[imageDataset[i], labelDataset[i]] for i in range(numberOfImages)]
 random.shuffle(dataset)
-trainingDataset = dataset[:1000]
+trainingDataset = dataset[:3000]
 print(len(trainingDataset))
 
 print("Preprocessing Done!")

@@ -52,9 +52,9 @@ def loadFromIDX1(location, numberOfLabels):
     while i < numberOfLabels:
         label = datasetFile.read(1)
         label = np.frombuffer(label, dtype=np.uint8).astype(np.int64)
-        #labels.append(createLabel(label[0]))
+        labels.append(createLabel(label[0]))
 
-        labels.append(label[0])
+        #labels.append(label[0])
         i += 1
 
     return labels
