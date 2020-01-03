@@ -35,7 +35,7 @@ class Layer:
         self.previousLayer = None
         self.followingLayer = None
         self.activationFunction = activationFunction
-        self.derivActivation = ac.derivitiveSigmoid
+        self.derivActivation = ac.sigmoid
 
     def runLayer(self, debug = False):
         """This function will loop through all the neurons of the layer and activate the runNeuron() function.

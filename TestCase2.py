@@ -7,7 +7,7 @@ dataLocation = "data/"
 numberOfImages = 1000
 
 
-importModel = open(modelLocation + "model_20-12-2019_10-17-09_AM.obj", "rb")
+importModel = open(modelLocation + "Model_C.obj", "rb")
 model = pickle.load(importModel)
 #model.printNetwork()
 

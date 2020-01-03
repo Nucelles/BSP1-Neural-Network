@@ -137,7 +137,7 @@ class Network:
 
                     if True:
                         print("\nNetwork Output", networkOutput)
-                        print("Predicted Output", currentInput[1], ", MSE = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
+                        #print("Predicted Output", currentInput[1], ", MSE = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
 
 
                     self.backpropogation(learningRate, predictedY, debug)
@@ -151,10 +151,10 @@ class Network:
                 epochTotal = epochTimeOut - epochTimeIn
 
                 # This print needs to be done after each epoch, with the sum of the loss of each image.
-                print("Mean Squared Loss of Epoch = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
+                #print("Mean Squared Loss of Epoch = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
                 print("Time Taken = {0:4.3}secs.\n".format(epochTotal))
 
-                self.saveNetwork()
+                # self.saveNetwork()
 
                 if currentEpoch != epochs - 1:
                     totalTime += epochTotal
@@ -193,13 +193,17 @@ class Network:
             layer.updateWeights(learningRate, predictedY, debug)
 
 
-    def saveNetwork(self):
+    def saveNetwork(self, name = "default"):
         """This method will pickle the object, and save it to a /model folder.
 
         |
         """
-        name = (datetime.now().strftime("model_%d-%m-%Y_%I-%M-%S_%p"))
-        fullFileName = 'model\{}.obj'.format(name)
+
+        if name != "default":
+            fullFileName = 'model\{}.obj'.format(name)
+        else:
+            name = (datetime.now().strftime("model_%d-%m-%Y_%I-%M-%S_%p"))
+            fullFileName = 'model\{}.obj'.format(name)
 
         with open(fullFileName, 'wb') as objectFile:
             pickle.dump(self, objectFile)

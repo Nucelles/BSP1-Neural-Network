@@ -6,17 +6,12 @@ import NeuralNetwork as nn
 import ActivationFunctions as ac
 import Layer as layer
 import PreProcesssing as pre
-import gzip
-import numpy as np
-import matplotlib.pyplot as plt
 import random
-import pickle
-
 
 # Preprocess the dataset into a readable format
 
 loc = "data/"
-numberOfImages = 15000
+numberOfImages = 30000
 
 print("Pre-processing Dataset...")
 print("    Number of Images = {}".format(numberOfImages))
@@ -30,21 +25,8 @@ print(len(trainingDataset))
 
 print("Preprocessing Done!")
 
-
-"""
-Shuffle Testing
-showImageFrom1D(trainingDataset[0][0])
-print("1st Image Pre-shuffle Label = {}".format(trainingDataset[0][1]))
-
-random.shuffle(trainingDataset)
-
-showImageFrom1D(trainingDataset[0][0])
-print("1st Image After-shuffle Label = {}".format(trainingDataset[0][1]))
-"""
-
-
 learningRate = 0.05
-epochs = 5
+epochs = 10
 debug = False
 activation = ac.sigmoid
 
@@ -69,7 +51,7 @@ print("Training Done!")
 
 
 print("Model Saved!")
-model.saveNetwork()
+model.saveNetwork("Model_C")
 
 
 """
