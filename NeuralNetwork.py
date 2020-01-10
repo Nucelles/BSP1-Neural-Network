@@ -62,7 +62,7 @@ class Network:
             if debug: print("----- Running", layer, "-----")
             layer.runLayer(False)
 
-        print(self.layers[-1].layerOutput)
+        return self.layers[-1].layerOutput
 
     def add(self, layerToAdd):
         """This function wil add a layer to the network in order. Only one layer can be added at a time.
@@ -78,7 +78,7 @@ class Network:
             self.layers[-2].followingLayer = self.layers[-1]
 
 
-    def runNetwork(self, inputData, learningRate, epochs, debug = False):
+    def runNetwork(self, inputData, learningRate, epochs, modelName = "default", debug = False):
         """This method will receive the training set and run the neural network under the given parameters.
 
         :param inputData: This is the list of data that will be fed to the neural network.
@@ -135,8 +135,8 @@ class Network:
 
                     # TESTING
 
-                    if True:
-                        print("\nNetwork Output", networkOutput)
+                    if False:
+                        print("\nNetwork Output", networkOutput, " ===", predictedY)
                         #print("Predicted Output", currentInput[1], ", MSE = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
 
 
@@ -154,7 +154,7 @@ class Network:
                 #print("Mean Squared Loss of Epoch = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
                 print("Time Taken = {0:4.3}secs.\n".format(epochTotal))
 
-                # self.saveNetwork()
+                self.saveNetwork(name=modelName)
 
                 if currentEpoch != epochs - 1:
                     totalTime += epochTotal
@@ -207,6 +207,8 @@ class Network:
 
         with open(fullFileName, 'wb') as objectFile:
             pickle.dump(self, objectFile)
+
+        print("{} Saved!".format(fullFileName))
 
     def printNetwork(self, debug = True):
         """This method will print the Network in a readable format, with the description of each Neuron

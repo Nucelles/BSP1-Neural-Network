@@ -20,38 +20,38 @@ labelDataset = pre.loadFromIDX1(loc + "train_labels.gz", numberOfImages)
 
 dataset = [[imageDataset[i], labelDataset[i]] for i in range(numberOfImages)]
 random.shuffle(dataset)
-trainingDataset = dataset[:3000]
-print(len(trainingDataset))
+trainingDataset_Large = dataset[:4000]
 
 print("Preprocessing Done!")
 
-learningRate = 0.05
-epochs = 10
-debug = False
+
 activation = ac.sigmoid
 
 
-print("Creating Model...")
+print("Creating Models...")
 model = nn.Network()
 
 model.add(layerToAdd=layer.inputLayer(784, activation))
 model.add(layerToAdd=layer.neuronLayer(256, activation))
 model.add(layerToAdd=layer.neuronLayer(128, activation))
 model.add(layerToAdd=layer.outputLayer(10, activation))
-print("Compiling Model...")
 model.compile()
 
-print("Training Model...")
-print("    Learning Rate = {}\n"
-      "    Number of Epochs = {}\n"
-      "    Debugging = {}".format(learningRate, epochs, debug))
+model_A = model
+model_B = model
+model_C = model
+model_D = model
 
-model.runNetwork(trainingDataset, learningRate, epochs, debug)
-print("Training Done!")
+model_A.runNetwork(trainingDataset_Large, 0.05, 5, False)
+model_B.runNetwork(trainingDataset_Large, 0.005, 5, False)
+model_C.runNetwork(trainingDataset_Large, 0.05, 10, False)
+model_D.runNetwork(trainingDataset_Large, 0.005, 10, False)
 
-
-print("Model Saved!")
-model.saveNetwork("Model_C")
+model_A.saveNetwork("Model_A")
+model_B.saveNetwork("Model_B")
+model_C.saveNetwork("Model_C")
+model_D.saveNetwork("Model_D")
+print("DONE!!!!!")
 
 
 """

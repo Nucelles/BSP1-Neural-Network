@@ -43,7 +43,7 @@ def loadFromIDX3(location, imageHeight, imageWidth, numberOfImages):
 
     return data
 
-def loadFromIDX1(location, numberOfLabels):
+def loadFromIDX1(location, numberOfLabels, oneHotEncodded = True):
     datasetFile = gzip.open(location, "r")
     datasetFile.read(8)
 
@@ -52,9 +52,12 @@ def loadFromIDX1(location, numberOfLabels):
     while i < numberOfLabels:
         label = datasetFile.read(1)
         label = np.frombuffer(label, dtype=np.uint8).astype(np.int64)
-        labels.append(createLabel(label[0]))
-
-        #labels.append(label[0])
+        if oneHotEncodded:
+            formattedLabel = [0 for i in range(10)]
+            formattedLabel[label[0]] = 1
+            labels.append(formattedLabel)
+        else:
+            labels.append(label[0])
         i += 1
 
     return labels
