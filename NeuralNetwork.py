@@ -12,7 +12,6 @@ class Network:
 
     :param layers: List holds the layer objects in the network
     :type layers: list
-    |
     """
 
     def __init__(self, layerList = None):
@@ -20,7 +19,6 @@ class Network:
 
         :param layerList: This is an optional list input that holds layers, for one line whole network creation
         :type layerList: list, optional
-        |
         """
         self.layers = []
 
@@ -31,8 +29,6 @@ class Network:
 
     def compile(self):
         """This method compiles the network, this means that it connects each layer and initializes their weights.
-
-        |
         """
 
         for n in self.layers[0].neuronList:
@@ -51,7 +47,6 @@ class Network:
 
         :return: The output of the network
         :rtype: list
-        |
         """
         if debug:
             print("---------------FORWARD PROPAGATION---------------")
@@ -69,14 +64,12 @@ class Network:
 
         :param layerToAdd: This is the layer class object that will be added.
         :type layerToAdd: Layer
-        |
         """
         assert issubclass(type(layerToAdd), Layer.Layer)
         self.layers.append(layerToAdd)
         if type(layerToAdd) != Layer.inputLayer:
             self.layers[-1].previousLayer = self.layers[-2]
             self.layers[-2].followingLayer = self.layers[-1]
-
 
     def runNetwork(self, inputData, learningRate, epochs, modelName = "default", debug = False):
         """This method will receive the training set and run the neural network under the given parameters.
@@ -89,7 +82,6 @@ class Network:
         :type epochs: int
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional;
-        |
         """
 
         #self.printNetwork()
@@ -98,11 +90,11 @@ class Network:
 
             epochResults = []
             totalTime = 0
-            for currentEpoch in tqdm(range(epochs), desc="Epoch"):
+            for currentEpoch in range(epochs):
 
                 epochTimeIn = perf_counter()
 
-                print("Epoch {}".format(currentEpoch))
+                print("Epoch {}".format(currentEpoch + 1))
 
                 if debug :
                     print("\n\n","|"*35, currentEpoch, "|"*35)
@@ -133,11 +125,6 @@ class Network:
                         print("\nNetwork Output for Epoch {} = {}".format(currentEpoch, networkOutput))
                         print("\n---------------BACKWARDS PROPAGATION---------------")
 
-                    # TESTING
-
-                    if False:
-                        print("\nNetwork Output", networkOutput, " ===", predictedY)
-                        #print("Predicted Output", currentInput[1], ", MSE = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
 
 
                     self.backpropogation(learningRate, predictedY, debug)
@@ -154,11 +141,12 @@ class Network:
                 #print("Mean Squared Loss of Epoch = {}".format(self.meanSquaredLoss(networkOutput, predictedY)))
                 print("Time Taken = {0:4.3}secs.\n".format(epochTotal))
 
-                self.saveNetwork(name=modelName)
+
 
                 if currentEpoch != epochs - 1:
                     totalTime += epochTotal
                 else:
+                    self.saveNetwork(name=modelName)
                     print("Final Time (in Seconds) = {}".format(totalTime + epochTotal), "\n")
 
         else:
@@ -182,7 +170,7 @@ class Network:
         rangeReverse = list(range(1, len(self.layers)))
         rangeReverse.reverse()
         for layer in rangeReverse:
-            self.layers[layer].calculatePartialDerivatives(predictedY, debug)
+            self.layers[layer].calcPartialDerivatives(predictedY, debug)
 
         for layer in self.layers[1:]:
             for neuron in layer.neuronList:
@@ -190,13 +178,11 @@ class Network:
 
         for layer in self.layers[1:]:
             if debug: print("\n----- Backpropagating", layer, "-----")
-            layer.updateWeights(learningRate, predictedY, debug)
-
+            layer.updateWeights(learningRate, debug)
 
     def saveNetwork(self, name = "default"):
         """This method will pickle the object, and save it to a /model folder.
 
-        |
         """
 
         if name != "default":
@@ -215,22 +201,15 @@ class Network:
 
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-        |
         """
 
         print(self)
         for l in self.layers:
             print(" "*4*1, l)
-            for n in l.neuronList:
-                print(" "*4*2, n)
-                if debug:
-                    if type(l) != Layer.inputLayer:
-                        print(" "*4*3, "Weights = {}".format(n.weights))
-                        print(" "*4*3, "Bias = {}".format(n.bias))
-                        print(" "*4*3, "Activation Function = {}".format(n.activationFunction))
-                        print(" "*4*3, "partialDerivative = {}".format(n.partialDerivative))
-            print()
+            print(" " * 4*2, "Number of Neuron in Layer = {}".format(len(l.neuronList)))
+            print(" " * 4*2, "Activation Function of Layer = {}".format(l.activationFunction))
 
+            print()
 
     def inputWeights(self, presetWeights):
         """
@@ -238,15 +217,10 @@ class Network:
 
         :param presetWeights: list of list of float, this is a structured array of weights that is needed adding a predefined weight.
         :type presetWeights: list
-        |
         """
         for layer in range(1, len(self.layers)):
             for neuron in range(len(self.layers[layer].neuronList)):
                 self.layers[layer].neuronList[neuron].weights = presetWeights[layer-1][neuron]
-
-    def calculateLoss(self, networkOutput, predictedOutput):
-
-        return #loss of the particular image, this will be added to the overall loss when caclulating the meanSquaredLoss
 
     def meanSquaredLoss(self, output, actual):
         """This function will calculate the mean squared loss of a neuron.
@@ -255,7 +229,6 @@ class Network:
         :type output: list
         :param actual: This is the actual intended output
         :type actual: list
-        |
         """
 
         if len(output) == len(actual):

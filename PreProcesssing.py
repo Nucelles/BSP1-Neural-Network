@@ -18,7 +18,20 @@ def unPickleModel(location):
 
     return model
 
-def loadFromIDX3(location, imageHeight, imageWidth, numberOfImages):
+def loadFromIDX3(location, imageHeight = 28, imageWidth = 28, numberOfImages = 1000):
+    """
+    This function unpacks the IDX MNIST image dataset and preprocesses them for training.
+    :param location: location of the IDX file in the folder (zipped)
+    :type location: str
+    :param imageHeight: height of the image
+    :type imageHeight: int
+    :param imageWidth: width of the image
+    :type imageWidth: int
+    :param numberOfImages: number of images to unpack
+    :type numberOfImages: int
+    :return: Returns the an array dataset images
+    :rtype: int array
+    """
     datasetFile = gzip.open(location, "r")
     datasetFile.read(16)
     unitLength = imageHeight*imageWidth
@@ -43,7 +56,19 @@ def loadFromIDX3(location, imageHeight, imageWidth, numberOfImages):
 
     return data
 
-def loadFromIDX1(location, numberOfLabels, oneHotEncodded = True):
+def loadFromIDX1(location, numberOfLabels, oneHotEncoded = True):
+    """
+    This function unpacks the IDX MNIST label dataset and preprocesses them for training.
+
+    :param location: location of the IDX file in the folder (zipped)
+    :type location: str
+    :param numberOfLabels: number of labels to unpack
+    :param numberOfLabels: int
+    :param oneHotEncoded: True/False if the labels should be one-hot encoded
+    :param oneHotEncoded: boolean
+    :return: Returns the an array dataset labels
+    :rtype: int array
+    """
     datasetFile = gzip.open(location, "r")
     datasetFile.read(8)
 
@@ -52,7 +77,7 @@ def loadFromIDX1(location, numberOfLabels, oneHotEncodded = True):
     while i < numberOfLabels:
         label = datasetFile.read(1)
         label = np.frombuffer(label, dtype=np.uint8).astype(np.int64)
-        if oneHotEncodded:
+        if oneHotEncoded:
             formattedLabel = [0 for i in range(10)]
             formattedLabel[label[0]] = 1
             labels.append(formattedLabel)
@@ -62,36 +87,56 @@ def loadFromIDX1(location, numberOfLabels, oneHotEncodded = True):
 
     return labels
 
-def showImageFrom1D(img):
-    cur = 1
-    wholeImage = []
-    row = []
-    for i in img:
-
-        if cur == 28:
-            cur = 1
-            wholeImage.append(row)
-            #print(row)
-            row = []
-        else:
-            cur += 1
-            #print(i)
-            row.append(i)
-            #print(row)
-
-    #print(wholeImage)
-
-    showImageNumpy(wholeImage)
-
-
 
 def showImageNumpy(img):
+    """
+    Function prints a MNIST image using matplotlib
+    :param img:
+    :type img:
+    """
     image = np.asarray(img).squeeze()
     plt.imshow(image)
     plt.show()
 
-def createLabel(label):
-    formattedLabel = [0 for i in range(10)]
-    formattedLabel[label] = 1
 
-    return formattedLabel
+def testModel(testDataset, model):
+    """
+    Function used for testing the model, will print you accuracy and results at the end.
+    :param testDataset: An array contain an annotated list of
+    :type testDataset: int array
+    :param model: A network object that will be tested
+    :type model: Network
+    """
+    print("\nTesting Started...")
+    testDataLength = len(testDataset)
+    digitError = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    digitSeen = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    correct = 0
+
+    for testPair in tqdm(testDataset):
+        digitSeen[testPair[1]] += 1
+        prediction = model.feedNetwork(testPair[0])
+
+        predictedDigit = prediction.index(max(prediction))
+        correctDigit = testPair[1]
+
+
+        if predictedDigit == correctDigit:
+            correct += 1
+        else:
+            digitError[correctDigit] += 1
+
+    print("Testing Completed!"
+          "\n\nModel Results:"
+          "\nAccuracy = {}%"
+          "\nCorrect = {}"
+          "\nIncorrect = {}"
+          "\nDataset Size = {}".format(correct / testDataLength * 100, correct, testDataLength - correct, testDataLength))
+
+    print("\nDigit Error Breakdown:")
+    for i in range(len(digitError)):
+        labelSeen, labelCorrect = digitSeen[i], digitSeen[i] - digitError[i]
+        acc = (labelCorrect / labelSeen) * 100
+        print("Label {} = {}/{}".format(i, labelCorrect, labelSeen), ", Acc = {}%\n".format(acc))
+    print(digitError)
+

@@ -29,8 +29,6 @@ class Neuron:
         :type numberOfInputs: int
         :param activationFunction: Function name of the activation function that will be used.
         :type activationFunction: function
-
-        |
         """
         self.debug = False
         self.partialDerivative = None
@@ -40,7 +38,7 @@ class Neuron:
         self.bias = 0
         self.output = 0
 
-    def runNeuron(self, inputs, debug = False):
+    def runNeuron(self, inputs, debug=False):
         """
         Method calls each main method used for feeding data through the network.
 
@@ -49,8 +47,6 @@ class Neuron:
 
         :return: Returns the output of the neuron
         :rtype: float
-
-        |
         """
         dotOutput = self.applyDot(inputs, debug)
         output = self.applyActivationFunction(dotOutput, debug)
@@ -59,7 +55,7 @@ class Neuron:
 
         return output
 
-    def applyDot(self, inputs, debug = False):
+    def applyDot(self, inputs, debug=False):
         """Method uses the dot function with the inputs and neuron weights.
 
         :param inputs: list of floats, the array of previous neuron outputs of the last layer
@@ -67,8 +63,6 @@ class Neuron:
 
         :return: Returns the dot product of the weights and inputs
         :rtype: float
-
-        |
         """
 
         dotOutput = 0
@@ -93,7 +87,7 @@ class Neuron:
 
         return dotOutput + self.bias
 
-    def applyActivationFunction(self, dotOutput, debug = False):
+    def applyActivationFunction(self, dotOutput, debug=False):
         """Method applies the activation function to the input
 
         :param dotOutput: Float which is is the output of the applyDot method
@@ -103,8 +97,6 @@ class Neuron:
 
         :return: Returns the input applied by the activation function.
         :rtype: float
-
-        |
         """
         if debug:
             act = self.activationFunction(dotOutput)

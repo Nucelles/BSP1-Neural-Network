@@ -26,8 +26,6 @@ class Layer:
         :type layers: int
         :param activationFunction: The activation function of the layer
         :type activationFunction: function
-
-        |
         """
         self.layers = layers
         self.neuronList = []
@@ -42,8 +40,6 @@ class Layer:
 
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-
-        |
         """
         self.layerOutput = []
         for neuron in self.neuronList:
@@ -53,34 +49,17 @@ class Layer:
 
     def initiateWeights(self):
         """This method initialises the weights for each neuron in the layer.
-
-        |
         """
         for i in range(self.layers):
             self.neuronList.append(Neuron(self.previousLayer.layers, self.activationFunction))
 
-    def changeActivationFunction(self, activationFunction):
-        """This function will change the activation function of the layer, and return nothing
-
-        :param activationFunction: The activation function that will replace the current one in the layer.
-        :type activationFunction: function
-
-        |
-        """
-        for i in self.neuronList:
-            i.activationFunction = activationFunction
-
-    def updateWeights(self, learningRate, expectedOutput, debug = True):
+    def updateWeights(self, learningRate, debug = True):
         """This method loops through each neuron in the layer and updates their values.
 
         :param learningRate: The learning rate that will be applied to the change in weight value
         :type learningRate: float
-        :param expectedOutput: The expected output of the network as a list
-        :type expectedOutput: list
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-
-        |
         """
 
         for neuron in range(len(self.neuronList)): # Will loop through the range of neuronList
@@ -119,15 +98,11 @@ class softmaxLayer(Layer):
 
         :param layer: The number of layers that will be in the network
         :type layer: int
-
-        |
         """
         super().__init__(layers=layer, activationFunction=ac.identity)
 
     def runLayer(self):
         """This method will run each neuron in the layer, using the runNeuron method.
-
-        |
         """
         neuronLayerOutput = []
         for neuron in self.neuronList:
@@ -138,7 +113,7 @@ class softmaxLayer(Layer):
         for softmaxValue in neuronLayerOutput:
             self.layerOutput.append(softmaxValue)
 
-class neuronLayer(Layer):
+class hiddenLayer(Layer):
     """This is the Neuron Layer class, which will run the neuron using the set activation function"""
 
     def __init__(self, layers, activationFunction):
@@ -148,12 +123,10 @@ class neuronLayer(Layer):
         :type layers: int
         :param activationFunction: The activation function that will be used in the network
         :type activationFunction: function
-
-        |
         """
         super().__init__(layers, activationFunction)
 
-    def calculatePartialDerivatives(self, predictedOutput, debug = False):
+    def calcPartialDerivatives(self, predictedOutput, debug = False):
         """This method calculates the partial derivatives for each neuron layer to be used during backpropagation
 
         :param predictedOutput: The predicted output of the network
@@ -199,8 +172,6 @@ class inputLayer(Layer):
         :type layerSize: int
         :param activationFunction: The activation function that will be used in the network
         :type activationFunction: function
-
-        |
         """
         super().__init__(layerSize, activationFunction)
 
@@ -213,8 +184,6 @@ class inputLayer(Layer):
         :type inputData: list
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-
-        |
         """
         self.layerOutput = []
 
@@ -235,20 +204,16 @@ class outputLayer(Layer):
         :type layerSize: int
         :param activationFunction: The activation function that will be used in the network
         :type activationFunction: function
-
-        |
         """
         super().__init__(layerSize, activationFunction)
 
-    def calculatePartialDerivatives(self, predictedOutput, debug = False):
+    def calcPartialDerivatives(self, predictedOutput, debug = False):
         """This method calculates the error for each neuron in the layer
 
         :param predictedOutput: The expected output of the network
         :type predictedOutput: list
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-
-        |
         """
 
         for neuron in range(len(self.neuronList)):
@@ -267,8 +232,6 @@ class outputLayer(Layer):
 
         :param debug: Boolean flag for turning on debug mode
         :type debug: bool, optional
-
-        |
         """
         #print("\nOutput Layer!")
         self.layerOutput = []
